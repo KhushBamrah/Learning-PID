@@ -13,21 +13,23 @@ const int pulsesPerRevolution = 1050;
 
 // ---------- INTEGRAL CONTROL ----------
 float targetRPM = 100.0;
-float Ki = 0.5;
+float Ki = 50.0;
 float integralOutput = 0.0;
 
 const unsigned long sampleTime = 100;
 const unsigned long stepTime = 2000;
-const unsigned long testDuration = 25000;
+const unsigned long testDuration = 50000;
 
 unsigned long startTime;
 unsigned long lastSampleTime;
 
-void countPulse() {
+void countPulse()
+{
   encoderCount++;
 }
 
-void setup() {
+void setup()
+{
   pinMode(ENB, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
@@ -55,7 +57,8 @@ void setup() {
   lastSampleTime = startTime;
 }
 
-void loop() {
+void loop()
+{
   unsigned long now = millis();
   unsigned long elapsed = now - startTime;
 
@@ -68,7 +71,7 @@ void loop() {
   }
 
   if (now - lastSampleTime >= sampleTime) {
-    float dt = (now - lastSampleTime);
+    float dt = (now - lastSampleTime) / 1000.0;
     lastSampleTime = now;
 
     // Safely copy and reset encoder count
@@ -79,25 +82,24 @@ void loop() {
 
     // RPM measurement
     float rpm =
-      (pulses * 60000.0) /
+      (pulses * 60.0) /
       (pulsesPerRevolution * dt);
 
     // Step input: 0 RPM, then 50 RPM
     if (elapsed < stepTime) {
       targetRPM = 0;
     } else {
-      targetRPM = 100;
+      targetRPM = 50;
     }
 
     float error = targetRPM - rpm;
 
     // Integral-only controller
     integralOutput += Ki * error * dt;
+    //Serial.println(integralOutput);
 
     // Clamp output to valid PWM range
-    integralOutput = constrain(
-      integralOutput, 0.0, 255.0
-    );
+    integralOutput = constrain(integralOutput, 0.0, 255.0);
 
     int pwm = (int)integralOutput;
 
